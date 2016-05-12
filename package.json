@@ -1,0 +1,27 @@
+{
+  "name": "ioc.green",
+  "version": "1.0.0",
+  "description": "IoC Container for Node v6",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DerekSeverson/ioc.green.git"
+  },
+  "keywords": [
+    "IoC",
+    "DI",
+    "Dependency Injection",
+    "Inversion of Control",
+    "promise",
+    "async"
+  ],
+  "author": "Derek Severson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DerekSeverson/ioc.green/issues"
+  },
+  "homepage": "https://github.com/DerekSeverson/ioc.green#readme"
+}
