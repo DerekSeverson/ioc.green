@@ -23,5 +23,10 @@
   "bugs": {
     "url": "https://github.com/DerekSeverson/ioc.green/issues"
   },
-  "homepage": "https://github.com/DerekSeverson/ioc.green#readme"
+  "homepage": "https://github.com/DerekSeverson/ioc.green#readme",
+  "dependencies": {
+    "bluebird": "^3.3.5",
+    "joi": "^8.1.0",
+    "lodash": "^4.12.0"
+  }
 }

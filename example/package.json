@@ -12,6 +12,7 @@
   "author": "Derek Severson",
   "license": "MIT",
   "dependencies": {
+    "co": "^4.6.0",
     "ioc.green": "file:../"
   }
 }

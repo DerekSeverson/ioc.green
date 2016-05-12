@@ -1,12 +1,20 @@
 'use strict';
 
 const Joi = require('joi');
+const Promise = require('bluebird');
 const {
   isString,
   isArray,
+  isEmpty,
+  each,
+  map,
+  filter,
+  find,
+  transform,
+  every,
+  some,
+  keys,
 } = require('lodash');
-
-exports = module.exports = Container;
 
 const REGEX_INJECTOR_SOURCE = /^\S+$/;
 const REGEX_INJECTOR_TARGET = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
@@ -15,9 +23,10 @@ const REGEX_MATCH_INJECTOR_AS_SYNTAX = /^(\S+) as (\S+)$/;
 const JOI_INJECTION = Joi.object().keys({
   source: Joi.string().regex(REGEX_INJECTOR_SOURCE).required(),
   target: Joi.string().regex(REGEX_INJECTOR_TARGET).required(),
+  original: Joi.string(),
 });
 
-const JOI_REGISTRATION = Joi.object.keys({
+const JOI_REGISTRATION = Joi.object().keys({
   $name: Joi.string().required(),
   $inject: Joi.array(),
   $value: Joi.any(),
@@ -25,10 +34,10 @@ const JOI_REGISTRATION = Joi.object.keys({
   $service: Joi.func(),
 }).xor('$value', '$factory', '$service').required();
 
-class Container {
+exports = module.exports = class Container {
 
   constructor () {
-    this.registry = new Map();
+    this.registry = {};
   }
 
   value (name, object) {
@@ -47,28 +56,29 @@ class Container {
 
     subject = new Registration(subject);
 
-    if (this.registry.has(subject.$name)) {
+    if (subject.$name in this.registry) {
       throw new Error('${subject.$name} is already registered.');
     }
 
-    this.registry.set(subject.$name, subject);
+    this.registry[subject.$name] = subject;
 
     return this;
   }
 
   start () {
-    return new Promise((resolve, reject) => {
-      const registry = this.registry;
-
-    });
+    return resolveAllDependencies(this.registry);
   }
 
   static create () {
     return new Container();
   }
 
-}
+};
 
+// --------------
+// Helper Classes
+
+// Registration Value Object
 class Registration {
 
   constructor (registration) {
@@ -94,9 +104,13 @@ class Registration {
     return exists(this.$service);
   }
 
+  get dependencies () {
+    return map(this.$inject, 'source');
+  }
+
 }
 
-// Injection ValueObject
+// Injection Value Object
 class Injection {
 
   constructor (injector) {
@@ -122,7 +136,80 @@ class Injection {
 
 }
 
-// NOTE: make sure to bind to Container when using.
+// ----------------
+// Helper Functions
+
+function resolveAllDependencies(registry) {
+  return new Promise((resolve, reject) => {
+
+    // Check if all dependencies are accounted for.
+    each(registry, (registeree) => {
+      let missing = find(registeree.dependencies, (dep) => !(dep in registry));
+      if (missing) throw new Error(`Dependency "${missing}" not defined.`);
+    });
+
+    // Objects for final results
+    let results = {};
+    let resolves = {};
+
+    // This will run until we got everything resolved.
+    let resolver = () => {
+      let batch = [];
+      let order = [];
+
+      each(registry, (registeree, name) => {
+        if (name in results) return;
+
+        // if any dependencies are unmet, just return.
+        if (some(registeree.dependencies, (dep) => !(dep in results))) return;
+
+        // All dependencies are met!! Run the provider to get value.
+        let value = runProvider(registeree, results);
+
+        // Must still be resolved.
+        if (isPromise(value)) {
+          batch.push(value);
+          order.push(name);
+        } else {
+          results[name] = value;
+        }
+      });
+
+      if (isEmpty(batch)) {
+        if (keys(results).length === keys(registry).length) return results;
+
+        let unresolved = keys(filter(registry, (reg, name) => !(name in results)));
+        throw new Error('Unresolvable dependencies: ' + unresolved.join(', '));
+      }
+
+      return Promise.all(batch).then((values) => {
+        each(values, (val, i) => results[order[i]] = val);
+      }).then(resolver);
+
+    }; // end of resolver().
+
+    resolve(resolver());
+  });
+}
+
+function runProvider(registeree, container) {
+  if (registeree.isValue) {
+    return registeree.$value;
+  }
+
+  if (registeree.isFactory || registeree.isService) {
+    let arg = transform(registeree.$inject, (arg, injection) => {
+      arg[injection.target] = container[injection.source];
+    }, {});
+
+    return registeree.isFactory
+      ? registeree.$factory(arg)
+      : new registeree.$service(arg);
+  }
+
+  throw new Error('Unknown Registeration Type.'); // should never happen.
+}
+
 function prepForRegister($name, $inject, callback, type) {
 
   if (!exists(callback)) {
@@ -138,4 +225,8 @@ function prepForRegister($name, $inject, callback, type) {
 
 function exists(o) {
   return o != null; // === null || === undefined;
+}
+
+function isPromise(o) {
+  return o && o.then && typeof o.then === 'function';
 }

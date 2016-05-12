@@ -3,6 +3,16 @@
 const co = require('co');
 const IoC = require('ioc.green');
 
+class Eater {
+  constructor ({ food }) {
+    this.food = food;
+  }
+
+  eat () {
+    console.log('eating: ', this.food);
+  }
+}
+
 co(function * () {
 
   let container = yield IoC.create()
@@ -25,6 +35,11 @@ co(function * () {
       Eater
     )
     .start();
+
+  container.PastaEater.eat();
+  container.PizzaEater.eat();
+
+  return container;
 
   // .register(require('A'))
   // .register(require('B'))
@@ -60,13 +75,3 @@ co(function * () {
 })
 .then((container) => console.log('container: ', container))
 .catch((err) => console.error('error: ', err));
-
-class Eater {
-  constructor ({ food }) {
-    this.food = food;
-  }
-
-  eat () {
-    console.log('eating: ', this.food);
-  }
-}
