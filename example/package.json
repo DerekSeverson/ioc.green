@@ -1,0 +1,17 @@
+{
+  "name": "ioc.green.example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "setup": "npm install -g linklocal bulk",
+    "sync": "linklocal link -r && linklocal list -r | bulk -c 'npm install --production'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Derek Severson",
+  "license": "MIT",
+  "dependencies": {
+    "ioc.green": "file:../"
+  }
+}
