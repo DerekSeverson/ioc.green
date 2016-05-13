@@ -52,6 +52,12 @@ exports = module.exports = class Container {
     return this.register(prepForRegister(name, injections, callback, '$service'));
   }
 
+  registerMany (arrayOfSubjects) {
+    each(arrayOfSubjects, (subject) => this.register(subject));
+
+    return this;
+  }
+
   register (subject) {
 
     subject = new Registration(subject);
@@ -86,7 +92,7 @@ class Registration {
     Joi.assert(registration, JOI_REGISTRATION, 'Invalid Registration Object');
 
     this.$name = registration.$name;
-    this.$inject = registration.$inject.map((injection) => new Injection(injection));
+    this.$inject = (registration.$inject || []).map(Injection.create);
     this.$value = registration.$value;
     this.$factory = registration.$factory;
     this.$service = registration.$service;
@@ -108,6 +114,9 @@ class Registration {
     return map(this.$inject, 'source');
   }
 
+  static create (registration) {
+    return new Registration(registration);
+  }
 }
 
 // Injection Value Object
@@ -134,6 +143,9 @@ class Injection {
     Joi.assert(this, JOI_INJECTION, 'Invalid Injection');
   }
 
+  static create (injector) {
+    return new Injection(injector);
+  }
 }
 
 // ----------------

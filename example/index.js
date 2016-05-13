@@ -34,6 +34,38 @@ co(function * () {
       ['Pasta as food'],
       Eater
     )
+    .factory(
+      'Menu',
+      ['Pasta', 'Pizza'],
+      function (food) {
+        console.log('Menu: ' + Object.keys(food).join(', '));
+      }
+    )
+    .factory(
+      'NoDependants',
+      function (nothing) {
+        console.log('NoDependants', nothing);
+      }
+    )
+    .registerMany({
+      './Dad': {
+        $name: 'Dad',
+        $inject: ['Pizza'],
+        $value: {
+          name: 'Jerry',
+          enjoy: ['Painting', 'Water Aerobics'],
+        },
+      },
+      'Mother/index.js': {
+        $name: 'Mom',
+        $factory: function () {
+          return {
+            name: 'Laura',
+            enjoy: ['Family', 'Walks'],
+          };
+        },
+      },
+    })
     .start();
 
   container.PastaEater.eat();
