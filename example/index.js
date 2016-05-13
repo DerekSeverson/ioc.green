@@ -8,8 +8,13 @@ class Eater {
     this.food = food;
   }
 
-  eat () {
-    console.log('eating: ', this.food);
+  eat (who, how) {
+    let str = '';
+    if (who) str += (who + ' is ');
+    str += 'eating ';
+    str += this.food;
+    if (how) str += (' with ' + how);
+    console.log(str);
   }
 }
 
@@ -17,10 +22,18 @@ co(function * () {
 
   let container = yield IoC.create()
     .value('Pasta', {
+      toString() {
+        return 'pasta';
+      },
+
       ingredients: ['spagetti', 'alfredo'],
       price: 9.75,
     })
     .value('Pizza', {
+      toString() {
+        return 'pizza';
+      },
+
       ingredients: ['pepperoni', 'sausage'],
       price: 12.45,
     })
@@ -65,6 +78,14 @@ co(function * () {
           };
         },
       },
+      Self: {
+        $name: 'Derek',
+        $inject: ['PizzaEater as pizza', 'PastaEater as pasta'],
+        $factory: function ({ pizza, pasta }) {
+          pizza.eat('Derek', 'hands');
+          pasta.eat('Derek', 'fork');
+        },
+      },
     })
     .start();
 
@@ -72,37 +93,6 @@ co(function * () {
   container.PizzaEater.eat();
 
   return container;
-
-  // .register(require('A'))
-  // .register(require('B'))
-  // .register(require('C'))
-  // .register({
-  //   $implements: 'EasyABC',
-  //   $inject: [
-  //     'config/rethinkdb as config',
-  //   ],
-  //   $factory: function ({ config }) {
-  //     return new Promise((resolve, reject) => resolve('Easy as ABC 123'));
-  //   },
-  // })
-  //
-  // .service(
-  //   'EasyAbc',
-  //   ['config/rethinkdb as config'],
-  //   class EasyABC {
-  //     constructor ({ config }) {
-  //       this.easy = config.easy;
-  //     }
-  //   }
-  // )
-  // .factory(
-  //   'EasyABC',
-  //   ['config/rethinkdb as config'],
-  //   function ({ config }) {
-  //     return config.easy;
-  //   }
-  // )
-  // .start();
 
 })
 .then((container) => console.log('container: ', container))
