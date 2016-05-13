@@ -82,8 +82,14 @@ co(function * () {
         $name: 'Derek',
         $inject: ['PizzaEater as pizza', 'PastaEater as pasta'],
         $factory: function ({ pizza, pasta }) {
-          pizza.eat('Derek', 'hands');
-          pasta.eat('Derek', 'fork');
+          const Derek = {
+            eat() {
+              pizza.eat('Derek', 'hands');
+              pasta.eat('Derek', 'fork');
+            },
+          };
+          Derek.eat();
+          return Derek;
         },
       },
     })

@@ -1,6 +1,6 @@
 {
   "name": "ioc.green",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0",
   "description": "IoC Container for Node v6",
   "main": "index.js",
   "scripts": {
